@@ -1,40 +1,51 @@
-name: Build APK
+name: Auto Build APK (No Local Setup Needed)
 
 on:
-  push:
-    branches: [ "main", "master" ]
   workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: Build & Check Compatibility
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          
-      - name: Setup Android SDK
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        
-      - name: Accept Android Licenses
-        run: yes | sdkmanager --licenses || true
-          
-      - name: Setup Gradle
+
+      # توليد Gradle Wrapper تلقائيًا لو مش موجود
+      - name: Generate Gradle Wrapper if missing
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            echo "No gradlew found — generating one..."
+            sudo apt-get update
+            sudo apt-get install -y gradle
+            gradle wrapper --gradle-version 8.2.1
+          fi
+          chmod +x ./gradlew
+
+      - name: Cache Gradle dependencies
         uses: gradle/actions/setup-gradle@v3
-        
-      - name: Make Gradle Executable
-        run: chmod +x gradlew || true
 
-      - name: Build with Gradle
-        # We rely on the system gradle or wrapper if present
-        run: gradle assembleDebug --no-daemon --stacktrace
+      # بناء APK
+      - name: Build Debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace --info
 
+      # رفع ملف الـ APK الناتج كـ Artifact
+      - name: Upload generated APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
