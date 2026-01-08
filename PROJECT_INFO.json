@@ -1,0 +1,13 @@
+{
+    "projectName": "QRMaster",
+    "package": "com.example.qrmaster",
+    "minSdk": 26,
+    "targetSdk": 34,
+    "javaVersion": 17,
+    "buildSystem": "Gradle",
+    "gradlePlugins": [
+        "com.android.application",
+        "org.jetbrains.kotlin.android"
+    ],
+    "notes": "Ensure you add the <provider> block from AndroidManifest_additions.txt into the main AndroidManifest.xml inside the <application> tag to enable File sharing."
+}
